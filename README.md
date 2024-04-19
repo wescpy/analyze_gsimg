@@ -1,4 +1,4 @@
-# Cloud image processing workflow:
+# AI-enhanced image processing workflow:
 ### Image archive, analysis, and report generation with Google APIs
 
 | :warning: Original repo likely to be archived |
@@ -7,7 +7,7 @@
 
 In the corresponding [hands-on tutorial](https://codelabs.developers.google.com/codelabs/drive-gcs-vision-sheets?utm_source=codelabs&utm_medium=et&utm_campaign=CDR_wes_workplace_gsdsanalyzegsimg_gsds_200114&utm_content=-) ("codelab"), developers build a command-line Python script the executes an image processing workflow using APIs from [Google Cloud](http://cloud.google.com/apis) (GCP) and [Google Workspace](http://developers.google.com/gsuite) (GWS; formerly G Suite and Google Apps).
 
-The exercise envisions a business scenario helping an enterprise backup their organization's data (image files, for example) to the cloud, analyze that data with machine learning, and report results formatted for management consumption. This repo provides code solutions for each step of the tutorial and also includes alternate versions of the final script which use different security libraries and/or authorization schemes. (More on this below in the "Authorization scheme and alternative versions" section.)
+The exercise envisions a business scenario helping an enterprise backup their organization's data (image files, for example) to the cloud, analyze that data with machine learning, and report results formatted for management consumption. This repo provides code solutions for each step of the tutorial and also includes alternate versions of the final script which use different security libraries and/or authorization schemes. (More on this below in the "NOTE for GCP Developers" sidebar and [Authorization scheme and alternative versions](#authorization-scheme-and-alternative-versions) section.)
 
 This exercise is for intermediate users. Those new to using Google APIs, specifically GWS and GCP APIs, should complete the introductory codelabs (listed at the bottom) or otherwise gain the requisite skills first. Read more about the app in [this Google Developers blog post](https://developers.googleblog.com/2020/10/image-archive-analysis-and-report?utm_source=ext&utm_medium=partner&utm_campaign=CDR_wes_workplace_gsdsanalyzegsimg_gsds_200114&utm_content=-) or [its cross-post to the Google Cloud blog](https://cloud.google.com/blog/topics/developers-practitioners/image-archive-analysis-and-report-generation-google-apis?utm_source=blog&utm_medium=partner&utm_campaign=CDR_wes_workplace_gsdsanalyzegsimg_gsds_200114).
 
@@ -17,8 +17,8 @@ This exercise is for intermediate users. Those new to using Google APIs, specifi
 - A Google or Gmail account (GWS accounts may require administrator approval)
 - A GCP project with an active billing account
 - Familiarity with operating system terminal/shell commands
-- Basic skills in [Python](http://python.org) (2 or 3)
-- Experience using Google APIs may be helpful but not required
+- Basic skills in [Python](http://python.org) (code is 2/3-compatible)
+- Experience using Google APIs not required for tutorial but may help when reading the code
 
 | :memo: **NOTE for GCP developers**: |
 |:---------------------------|
@@ -46,10 +46,10 @@ The image's binary data is used to send to GCS, but it can be reused with [Cloud
 
 1. **Add results to Google Sheets**
 The final feature is report generation in a Google Sheets spreadsheet: for each image backed up, insert a new row of metadata via the [Sheets API](https://developers.google.com/sheets). The row includes:
-    a. Any applicable folder
-    a. File metadata (name, size, MIMEtype, last modified timestamp)
-    a. Link to backed up file on GCS
-    a. Cloud Vision labels (image content)
+    1. Any applicable folder
+    1. File metadata (name, size, MIMEtype, last modified timestamp)
+    1. Link to backed up file on GCS
+    1. Cloud Vision labels (image content)
 
 1. **Refactor**
  The final, yet optional, step involves refactoring following best practices, moving the "main" body into a separate function, and adding command-line arguments for user flexibility.
