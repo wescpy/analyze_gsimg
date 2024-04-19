@@ -21,6 +21,8 @@ to Google Cloud Vision for processing, add results row to Google Sheet.
 
 from __future__ import print_function
 import io
+import os
+import sys
 
 from googleapiclient import discovery, http
 from httplib2 import Http
@@ -28,7 +30,7 @@ from oauth2client import file, client, tools
 
 FILE = 'YOUR_IMG_ON_DRIVE'
 BUCKET = 'YOUR_BUCKET_NAME'
-PARENT = ''     # YOUR IMG FILE PREFIX
+FOLDER = ''  # YOUR IMG FILE FOLDER (if any)
 
 # process credentials for OAuth2 tokens
 SCOPES = (
@@ -38,8 +40,11 @@ SCOPES = (
 store = file.Storage('storage.json')
 creds = store.get()
 if not creds or creds.invalid:
+    _args = sys.argv[1:]
+    del sys.argv[1:]
     flow = client.flow_from_clientsecrets('client_secret.json', SCOPES)
     creds = tools.run_flow(flow, store)
+    sys.argv.extend(_args)
 
 # create API service endpoints
 HTTP = creds.authorize(Http())
@@ -80,14 +85,14 @@ if __name__ == '__main__':
     rsp = drive_get_img(FILE)
     if rsp:
         fname, mtype, ftime, data = rsp
-        print('Downloaded %r (%s, %s, size: %d)' % (fname, mtype, ftime, len(data)))
+        print('\n* Downloaded %r (%s, %s, size: %d)' % (fname, mtype, ftime, len(data)))
 
         # upload file to GCS
-        gcsname = '%s/%s'% (PARENT, fname)
+        gcsname = os.path.join(FOLDER, fname)
         rsp = gcs_blob_upload(gcsname, BUCKET, data, mtype)
         if rsp:
-            print('Uploaded %r to GCS bucket %r' % (rsp['name'], rsp['bucket']))
+            print('\n* Uploaded %r to GCS bucket %r' % (rsp['name'], rsp['bucket']))
         else:
-            print('ERROR: Cannot upload %r to Cloud Storage' % gcsname)
+            print('\n* ERROR: Cannot upload %r to Cloud Storage' % gcsname)
     else:
-        print('ERROR: Cannot download %r from Drive' % fname)
+        print('\n* ERROR: could not process %r' % args.imgfile)

@@ -20,6 +20,8 @@ to Google Cloud Vision for processing, add results row to Google Sheet.
 '''
 
 from __future__ import print_function
+import os
+import sys
 
 from googleapiclient import discovery, http
 from httplib2 import Http
@@ -32,8 +34,11 @@ SCOPES = 'https://www.googleapis.com/auth/drive.readonly'
 store = file.Storage('storage.json')
 creds = store.get()
 if not creds or creds.invalid:
+    _args = sys.argv[1:]
+    del sys.argv[1:]
     flow = client.flow_from_clientsecrets('client_secret.json', SCOPES)
     creds = tools.run_flow(flow, store)
+    sys.argv.extend(_args)
 
 # create API service endpoints
 HTTP = creds.authorize(Http())
@@ -63,6 +68,6 @@ if __name__ == '__main__':
     rsp = drive_get_img(FILE)
     if rsp:
         fname, mtype, ftime, data = rsp
-        print('Downloaded %r (%s, %s, size: %d)' % (fname, mtype, ftime, len(data)))
+        print('\n* Downloaded %r (%s, %s, size: %d)' % (fname, mtype, ftime, len(data)))
     else:
-        print('ERROR: Cannot download %r from Drive' % fname)
+        print('\n* ERROR: could not process %r' % args.imgfile)

@@ -11,7 +11,18 @@ There are several generations of Google-related authorization and client librari
 > Both terms are generally referred to in industry as "authn" & "authz" for differentiation. Another source of confusion is that as a whole, the general term "auth" is used to describe both, especially when used in conjunction with each other.
 
 
-## What libraries are available
+## Auth libraries
+
+### Background
+
+**TL;DR:** `oauth2client` deprecated
+
+The `oauth2client` library was deprecated in 2017 in favor of newer replacements. However the newer libraries do not yet support user credentials (token) storage, meaning developers have to do this. (This is now reflected in the latest "QuickStart" API samples.) For now, `oauth2client` still works, even in maintenance mode, and provides automated, threadsafe, and 2.x/3.x-compatible storage of and access to OAuth2 tokens for users whereas the newer libraries do not (yet).
+
+> **WARNING:** do not mix-n-match usage of the "old stuff" and the "new stuff" because the old `Storage` class stores extra fields (e.g., `_class`, `_module`, etc.), that the new stuff neither reads nor writes, so if you run scripts that alternate, you'll eventually run into a `KeyError`, as described in [this bug](https://github.com/kshcherban/gdrive_uploader/issues/1).
+
+
+### What libraries are available
 
 * Older auth libraries
     - \*[`httplib2`](https://github.com/httplib2/httplib2)

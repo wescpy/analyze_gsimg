@@ -21,19 +21,19 @@ to Google Cloud Vision for processing, add results row to Google Sheet.
 
 from __future__ import print_function
 import argparse
+import os
+import time
 import webbrowser
 
 from googleapiclient import discovery
 from oauth2client import client
 from google.cloud import storage, vision
 
-k_ize = lambda b: '%6.2fK' % (b/1000.) # bytes to kBs
 FILE = 'YOUR_IMG_ON_DRIVE'
 BUCKET = 'YOUR_BUCKET_NAME'
-PARENT = ''     # YOUR IMG FILE PREFIX
+FOLDER = ''  # YOUR IMG FILE FOLDER (if any)
 SHEET = 'YOUR_SHEET_ID'
 TOP = 5       # TOP # of VISION LABELS TO SAVE
-DEBUG = False
 
 # create API service endpoints
 creds = client.GoogleCredentials.get_application_default()
@@ -41,6 +41,11 @@ DRIVE  = discovery.build('drive',   'v3', credentials=creds)
 GCS    = storage.Client()
 VISION = vision.ImageAnnotatorClient()
 SHEETS = discovery.build('sheets',  'v4', credentials=creds)
+
+
+def k_ize(nbytes):
+    'convert bytes to kBs'
+    return '%6.2fK' % (nbytes/1000.)
 
 
 def drive_get_img(fname):
@@ -103,22 +108,25 @@ def main(fname, bucket, sheet_id, folder, top, debug):
         return
     fname, mtype, ftime, data = rsp
     if debug:
-        print('Downloaded %r (%s, %s, size: %d)' % (fname, mtype, ftime, len(data)))
+        print('\n* Downloaded %r (%s, %s, size: %d)' % (fname, mtype, ftime, len(data)))
+        time.sleep(2)
 
     # upload file to GCS
-    gcsname = '%s/%s'% (folder, fname)
+    gcsname = os.path.join(folder, fname)
     rsp = gcs_blob_upload(gcsname, bucket, data, mtype)
     if not rsp:
         return
     if debug:
-        print('Uploaded %r to GCS bucket %r' % (rsp['name'], rsp['bucket']))
+        print('\n* Uploaded %r to GCS bucket %r' % (rsp['name'], rsp['bucket']))
+        time.sleep(2)
 
     # process w/Vision
     rsp = vision_label_img(data, top)
     if not rsp:
         return
     if debug:
-        print('Top %d labels from Vision API: %s' % (top, rsp))
+        print('\n* Top %d labels from Vision API: %s' % (top, rsp))
+        time.sleep(2)
 
     # push results to Sheet, get cells-saved count
     fsize = k_ize(len(data))
@@ -130,33 +138,36 @@ def main(fname, bucket, sheet_id, folder, top, debug):
     if not rsp:
         return
     if debug:
-        print('Added %d cells to Google Sheet' % rsp)
+        print('\n* Added %d cells to Google Sheet' % rsp)
+        time.sleep(2)
     return True
 
 
 if __name__ == '__main__':
     # args: [-hv] [-i imgfile] [-b bucket] [-f folder] [-s Sheet ID] [-t top labels]
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--imgfile", action="store_true",
-            default=FILE, help="image file filename")
-    parser.add_argument("-b", "--bucket_id", action="store_true",
-            default=BUCKET, help="Google Cloud Storage bucket name")
-    parser.add_argument("-f", "--folder", action="store_true",
-            default=PARENT, help="Google Cloud Storage image folder")
-    parser.add_argument("-s", "--sheet_id", action="store_true",
-            default=SHEET, help="Google Sheet Drive file ID (44-char str)")
-    parser.add_argument("-t", "--viz_top", action="store_true",
-            default=TOP, help="return top N (default %d) Vision API labels" % TOP)
-    parser.add_argument("-v", "--verbose", action="store_true",
-            default=DEBUG, help="verbose display output")
+    parser.add_argument("-i", "--imgfile",   default=FILE,
+            help="image file name")
+    parser.add_argument("-b", "--bucket_id", default=BUCKET,
+            help="Google Cloud Storage bucket name")
+    parser.add_argument("-f", "--folder",    default=FOLDER,
+            help="Google Cloud Storage image folder (default: '')")
+    parser.add_argument("-s", "--sheet_id",  default=SHEET,
+            help="Google Sheet (Drive file) ID (44-char str)")
+    parser.add_argument("-t", "--viz_top",   default=TOP,
+            help="return top N Vision API labels (default: %d)" % TOP)
+    parser.add_argument("-v", "--verbose",   action='store_true',
+            help="verbose display output (default: False)")
     args = parser.parse_args()
 
     print('Processing file %r... please wait' % args.imgfile)
+    print('-' * 65)
     rsp = main(args.imgfile, args.bucket_id,
             args.sheet_id, args.folder, args.viz_top, args.verbose)
     if rsp:
         sheet_url = 'https://docs.google.com/spreadsheets/d/%s/edit' % args.sheet_id
-        print('DONE: opening web browser to it, or see %s' % sheet_url)
+        print('\n* DONE: opening web browser to spreadsheet')
+        print(sheet_url)
         webbrowser.open(sheet_url, new=1, autoraise=True)
     else:
-        print('ERROR: could not process %r' % args.imgfile)
+        print('\n* ERROR: could not process %r' % args.imgfile)
