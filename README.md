@@ -65,7 +65,7 @@ We've selected to use *user account authorization* (instead of *service account 
 
 
 ## Further study recommendations
-Some of you will not do the tutorial, so below are some recommended exercises found in its "Additional Study" section as to how you can enhance the script's functionality:
+Some of you will not do the tutorial, so below are some recommended exercises found in its "Additional Study" section (plus a few bonus ones) as to how you can enhance the script's functionality:
 
 1. (_Images in folders_) Instead of processing one image, let's say you had one or more images in [Google Drive folders](https://developers.google.com/drive/api/v3/search-files). Back them all up matching each Drive folder on GCS.
 1. (_Images in ZIP files_) Instead of a folder of images, give the script the ability to process ZIP archives containing image files in a similar way. Consider using the Python [`zipfile` module](http://docs.python.org/library/zipfile).
@@ -74,7 +74,10 @@ Some of you will not do the tutorial, so below are some recommended exercises fo
 1. (_Process documents instead of images_) Instead of analyzing images with the Vision API, let the data come in the form of PDF files and use the [Cloud Natural Language API](http://cloud.google.com/language) to do the analysis. Process individual documents or use your solutions above to handle PDFs in Drive folders or ZIP archives on Drive.
 1. (_Create presentations_) Use the Slides API to generate a slide deck from the backed up images or from the data or charts from the spreadsheet you created/updated with the Sheets API. Check out this pair of blog posts & videos for inspiration: a) [generate slides from spreadsheet data](http://goo.gl/Yb06ZC) and b) [generate slides from images](http://goo.gl/sYL5AM) (JavaScript/Apps Script).
 1. (_Export report as PDF_) Enhance the "report generation" part of the tutorial by exporting the Sheet and/or slide deck as PDF, however this isn't a feature of either the Sheets or Slides APIs. **Hint**: Google Drive API. **Extra credit**: merge both the Sheets and Slides PDFs into one master PDF with a tool like Ghostscript (Linux, Windows) or `Combine PDF Pages.action` (macOS).
-1. (_Enhance reporting with LLMs_) Rather than Cloud Vision labels, ask an LLM (large language model) for a short description of an image, say using the latest OpenAI [GPT](https://platform.openai.com/docs/guides/vision) or Google [Gemini](https://ai.google.dev/gemini-api/docs/api-overview#text_image_input) models via their APIs, and store _that_ in the Sheet.
+1. ^(_Enhance reporting with LLMs_) Rather than Cloud Vision labels, ask an LLM (large language model) for a short description of an image, say using the latest OpenAI [GPT](https://platform.openai.com/docs/guides/vision) or Google [Gemini](https://ai.google.dev/gemini-api/docs/api-overview#text_image_input) models via their APIs, and store _that_ in the Sheet.
+1. ^(_Local file backup_) Rather than backing up file(s) from Google Drive, implement the ability for users to specify files from their local computer; everything else applies: back up to GCS, analyze with Vision, write to Sheets.
+1. ^(_Drive search query_) Rather than specifying specific files to back up, allow the user to enter a search query, and back up all matching files on Drive. **Hint**: Learn about querying Drive on the [search page](https://developers.google.com/drive/api/guides/search-files) in the API docs.
+1. ^(_Port to Node.js_) This is more for the maintainer who enjoys exercises like this, but feel free to do it if you're so inclined. :-) As an example, see [this blog post](https://dev.to/googleworkspace/export-google-docs-as-pdf-without-the-docs-api-9o4) on **exporting Google Docs as PDF** with code samples in both Python & Node.js.
 
 
 ## Summary
@@ -113,3 +116,7 @@ The tutorial (and its sample app) has a goal of helping developers envision a po
     - [Using Cloud Vision with Python](http://g.co/codelabs/vision-python) (Python)
     - [Build customized reporting tools (Google Sheets API)](http://g.co/codelabs/sheets) (JS/Node)
     - [Upload objects to Google Cloud Storage](http://codelabs.developers.google.com/codelabs/cloud-upload-objects-to-cloud-storage) (no coding required)
+
+<small>
+<sup>^</sup> — bonus exercise not found in the codelab
+</small>
