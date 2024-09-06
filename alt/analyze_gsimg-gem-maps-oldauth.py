@@ -1,10 +1,10 @@
-# Copyright 2020 Google LLC
+# Copyright 2024 CyberWeb Consulting LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#    http://apache.org/licenses/LICENSE-2.0
+#     apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,10 +13,11 @@
 # limitations under the License.
 
 '''
-analyze_gsimg-newauth-svc.py - analyze Drive image processing workflow
+analyze_gsimg-gem-maps.py - AI Drive image processing workflow + Maps
 
 Download image from Google Drive, archive to Google Cloud Storage, send
-to Google Cloud Vision for processing, add results row to Google Sheet.
+to Google Cloud Vision for processing, analyze with Gemini LLM, provide
+Google Maps link with geolocation data, add results row to Google Sheet.
 '''
 
 from __future__ import print_function
@@ -24,29 +25,74 @@ import argparse
 import base64
 import io
 import os
+import sys
 import time
 import webbrowser
 
 from googleapiclient import discovery, http
-import google.auth
+from httplib2 import Http
+from oauth2client import file, client, tools
 
-FILE = 'YOUR_IMG_ON_DRIVE'
+from PIL import Image
+import google.generativeai as genai
+from settings import API_KEY
+
+# gen AI setup
+PROMPT = 'Describe this image in 2-3 sentences'
+MODEL = 'gemini-1.5-flash-latest'
+genai.configure(api_key=API_KEY)
+model = genai.GenerativeModel(MODEL)
+
+# constants recommended in settings.py, database, etc., or
+# omitted entirely requiring users to enter on command-line
+FILE =   'YOUR_IMG_ON_DRIVE'
 BUCKET = 'YOUR_BUCKET_NAME'
 FOLDER = ''  # YOUR IMG FILE FOLDER (if any)
-SHEET = 'YOUR_SHEET_ID'
-TOP = 5       # TOP # of VISION LABELS TO SAVE
+SHEET =  'YOUR_SHEET_ID'
+TOP = 5  # REQUEST TOP #LABELS FROM CLOUD VISION
 
-# create API service endpoints
-creds, _proj_id = google.auth.default()
-DRIVE  = discovery.build('drive',   'v3', credentials=creds)
-GCS    = discovery.build('storage', 'v1', credentials=creds)
-VISION = discovery.build('vision',  'v1', credentials=creds)
-SHEETS = discovery.build('sheets',  'v4', credentials=creds)
+# process credentials for OAuth2 tokens
+SCOPES = (
+    'https://www.googleapis.com/auth/drive.readonly',
+    'https://www.googleapis.com/auth/devstorage.full_control',
+    'https://www.googleapis.com/auth/cloud-vision',
+    'https://www.googleapis.com/auth/spreadsheets',
+)
+store = file.Storage('storage.json')
+creds = store.get()
+if not creds or creds.invalid:
+    _args = sys.argv[1:]
+    del sys.argv[1:]
+    flow = client.flow_from_clientsecrets('client_secret.json', SCOPES)
+    creds = tools.run_flow(flow, store)
+    sys.argv.extend(_args)
+
+# create GWS & GCP API service endpoints (Gemini client above, no Maps client)
+HTTP = creds.authorize(Http())
+DRIVE  = discovery.build('drive',   'v3', http=HTTP)
+GCS    = discovery.build('storage', 'v1', http=HTTP)
+VISION = discovery.build('vision',  'v1', http=HTTP)  # or API key
+SHEETS = discovery.build('sheets',  'v4', http=HTTP)
 
 
 def k_ize(nbytes):
     'convert bytes to kBs'
     return '%6.2fK' % (nbytes/1000.)
+
+
+MAPS_API_URL = 'https://maps.googleapis.com/maps/api/staticmap?size=480x480&markers='
+def drive_geoloc_maps(file_id):
+    'return Maps API URL if image geolocation found, or empty string otherwise'
+
+    # query file for metadata on Drive, return empty string if no geolocation
+    imd = DRIVE.files().get(fileId=file_id,
+            fields='imageMediaMetadata').execute().get('imageMediaMetadata')
+    if not imd or 'location' not in imd:
+        return ''
+
+    # with geolocated image, assemble & return Google Maps Static API call-URL
+    return '%s%s,%s&key=%s' % (MAPS_API_URL, imd['location']['latitude'],
+            imd['location']['longitude'], API_KEY)
 
 
 def drive_get_img(fname):
@@ -64,7 +110,7 @@ def drive_get_img(fname):
         fname = target['name']
         mtype = target['mimeType']
         binary = DRIVE.files().get_media(fileId=fileId).execute()
-        return fname, mtype, target['modifiedTime'], binary
+        return fname, mtype, target['modifiedTime'], binary, drive_geoloc_maps(fileId)
 
 
 def gcs_blob_upload(fname, bucket, media, mimetype):
@@ -94,13 +140,19 @@ def vision_label_img(img, top):
                 for label in rsp['labelAnnotations'])
 
 
+def genai_analyze_img(media):
+    'analyze image with genAI LLM and return analysis'
+    image = Image.open(io.BytesIO(media))
+    return model.generate_content((PROMPT, image)).text.strip()
+
+
 def sheet_append_row(sheet, row):
     'append row to a Google Sheet, return #cells added'
 
     # call Sheets API to write row to Sheet (via its ID)
     rsp = SHEETS.spreadsheets().values().append(
-            spreadsheetId=sheet, range='Sheet1',
-            valueInputOption='USER_ENTERED', body={'values': [row]}
+            spreadsheetId=sheet, range='Sheet1', body={'values': [row]},
+            valueInputOption='USER_ENTERED', fields='updates(updatedCells)'
     ).execute()
     if rsp:
         return rsp.get('updates').get('updatedCells')
@@ -113,7 +165,7 @@ def main(fname, bucket, sheet_id, folder, top, debug):
     rsp = drive_get_img(fname)
     if not rsp:
         return
-    fname, mtype, ftime, data = rsp
+    fname, mtype, ftime, data, maps = rsp
     if debug:
         print('\n* Downloaded %r (%s, %s, size: %d)' % (fname, mtype, ftime, len(data)))
         time.sleep(2)
@@ -128,19 +180,36 @@ def main(fname, bucket, sheet_id, folder, top, debug):
         time.sleep(2)
 
     # process w/Vision
-    rsp = vision_label_img(base64.b64encode(data).decode('utf-8'), top)
-    if not rsp:
+    viz = vision_label_img(base64.b64encode(data).decode('utf-8'), top)
+    if not viz:
         return
     if debug:
-        print('\n* Top %d labels from Vision API: %s' % (top, rsp))
+        print('\n* Top %d labels from Vision API: %s' % (top, viz))
         time.sleep(2)
 
-    # push results to Sheet, get cells-saved count
+    # process w/Gemini
+    gem = genai_analyze_img(data)
+    if not gem:
+        return
+    if debug:
+        print('\n* Analysis from Gemini API: %s' % gem)
+        time.sleep(2)
+
+    # build row to write to Sheet
     fsize = k_ize(len(data))
     row = [folder,
             '=HYPERLINK("storage.cloud.google.com/%s/%s", "%s")' % (
-            bucket, gcsname, fname), mtype, ftime, fsize, rsp
+            bucket, gcsname, fname), mtype, ftime, fsize, viz, gem
     ]
+
+    # process optional geolocation
+    if maps:
+        row.append('=HYPERLINK("%s", "Photo location")' % maps)
+        if debug:
+            print('\n* Found location, Maps API URL: %s' % maps)
+            time.sleep(2)
+
+    # add new row to Sheet, get cells-saved count
     rsp = sheet_append_row(sheet_id, row)
     if not rsp:
         return

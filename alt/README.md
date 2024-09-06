@@ -40,19 +40,19 @@ If threadsafety isn't a concern in your applications, we encourage you to move t
 
 * GCP (higher-level) product client libraries
 
-"Google Cloud client libraries" or "GCP client libraries" both refer to *product* client libraries, meaning GCP products (Cloud Storage, Cloud Vision, etc.) have their own client libraries. If you're only developing using GCP tools, stick with these as they're the newest, best-perfoming, and are the recommended tools to use.
+Google Cloud/GCP client libraries refer to *product* client libraries, meaning GCP products (Cloud Storage, Cloud Vision, etc.) have their own client libraries. If you're only developing using GCP tools, stick with these as they're the newest, best-perfoming, and are the recommended tools to use.
 
-However, most *non-Cloud* Google APIs (G Suite, Maps, Analytics, YouTube, etc.), generally use (the older) Google APIs *platform* client libraries (that support multiple products, as no product client libraries typically exist for these APIs.) A platform client library can be seen as a "lowest common denominator" that can let you talk across all Google APIs, including GCP APIs.
+However, most *non-Cloud* Google APIs (Google Workspace/GWS, Maps, Analytics, YouTube, etc.), generally use (the older) Google APIs *platform* client libraries (that support multiple products, as no product client libraries typically exist for these APIs.) A platform client library can be seen as a "lowest common denominator" that can let you talk across all Google APIs, including GCP APIs.
 
-This codelab involved both GCP & G Suite APIs, so we employed the platform client library (for Python) for the purposes of consistency and code readability. However, we recommend porting Cloud Storage and Cloud Vision usage to their respective product client libraries, and you'd definitely do so for apps in production. Compare [final/analyze_gsimg.py](/final/analyze_gsimg.py) with [alt/analyze_gsimg-oldauth-gcp.py](/alt/analyze_gsimg-oldauth-gcp.py) and get migration tips. Using `diff -u` (or `-c`) should show you the *exact* diffs.
+This codelab involved both GCP & GWS APIs, so we employed the platform client library (for Python) for the purposes of consistency and code readability. However, we recommend porting Cloud Storage and Cloud Vision usage to their respective product client libraries, and you'd definitely do so for apps in production. Compare [final/analyze_gsimg.py](/final/analyze_gsimg.py) with [alt/analyze_gsimg-oldauth-gcp.py](/alt/analyze_gsimg-oldauth-gcp.py) and get migration tips. Using `diff -u` (or `-c`) should show you the *exact* diffs.
 
 
 ## Service account authorization
 
-- G Suite APIs: used primarily to access (human) user data, such as documents, email messages, etc., so *user account authorization* ("usr acct authz") is mainly used as those users whom the data belongs to must consent to access to their data by your application. When creating credentials in the Cloud Console, select "OAuth client ID".
+- GWS APIs: used primarily to access (human) user data, such as documents, email messages, etc., so *user account authorization* ("usr acct authz") is mainly used as those users whom the data belongs to must consent to access to their data by your application. When creating credentials in the Cloud Console, select "OAuth client ID".
 - GCP APIs: the GCP world is different... data here is generally owned by an application (a project) or a robot user, so *service account authorization* ("svc acct authz") is standard for GCP APIs. When creating credentials in the Cloud Console, select "Service account".
 
-This tutorial's sample app uses both G Suite *and* GCP APIs, so do we use user or service account authz? The answer is you can use either, but we picked user auth because the premise is a corporate user that has too many images in their Google Drive folder. Those images can be archived to Cloud Storage and sent to Cloud Vision for analysis. The results are written to that user's Google Sheets spreadsheet.
+This tutorial's sample app uses both GWS *and* GCP APIs, so do we use user or service account authz? The answer is you can use either, but we picked user auth because the premise is a corporate user that has too many images in their Google Drive folder. Those images can be archived to Cloud Storage and sent to Cloud Vision for analysis. The results are written to that user's Google Sheets spreadsheet.
 
 To get this app to work with service accounts, you need to give that service account access to read that user's image files and write permission to the spreadsheet by adding the service account email address to those files. Then switch the app from usr acct authz to svc acct authz, and things will work the same. Compare [final/analyze_gsimg.py](/final/analyze_gsimg.py) with [alt/analyze_gsimg-oldauth-svc.py](/alt/analyze_gsimg-oldauth-svc.py) and get migration tips. Using `diff -u` (or `-c`) should show you the *exact* diffs.
 
@@ -71,8 +71,10 @@ Filename | Description
 `alt/analyze_gsimg-newauth-svc.py` | Same as `alt/analyze_gsimg-newauth.py` but uses svc acct auth instead of user auth
 `alt/analyze_gsimg-oldauth-svc-gcp.py` | Same as `alt/analyze_gsimg-oldauth-svc.py` but uses the GCP product client libraries and same as `alt/analyze_gsimg-oldauth-gcp.py` but uses svc acct auth instead of user auth
 `alt/analyze_gsimg-newauth-svc-gcp.py` | Same as `alt/analyze_gsimg-oldauth-svc-gcp.py` but uses the newer auth libraries
+`alt/analyze_gsimg-gem-maps-oldauth.py` | Same as `final/analyze_gsimg.py` but adds use of Gemini & Maps Static APIs (2024)
 
 The code structure, variable names, and even the comments b/w all of them are *identical* save for their use of the various libraries described, meaning a `diff` between any pair will highlight only the *exact* differences that are meaningful, ultimately letting you gain insight on porting/migrating b/w them.
+
 
 ### Migrating to newer auth libs
 
@@ -126,9 +128,10 @@ Replace...
     VISION = discovery.build('vision',  'v1', credentials=creds)
     SHEETS = discovery.build('sheets',  'v4', credentials=creds)
 
+
 ### Migrating to service account authorization
 
-If you're more likely to engage with G Suite documents from a service account along with standard GCP usage, it makes sense to migrate from user account to service account authorization. The largest change is to completely remove the management of user account auth OAuth2 tokens.
+If you're more likely to engage with GWS documents from a service account along with standard GCP usage, it makes sense to migrate from user account to service account authorization. The largest change is to completely remove the management of user account auth OAuth2 tokens.
 
 Replace...
 

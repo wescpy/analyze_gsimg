@@ -13,7 +13,7 @@
 # limitations under the License.
 
 '''
-analyze_gsimg.py - analyze G Suite image processing workflow
+analyze_gsimg-oldauth-gcp.py - analyze Drive image processing workflow
 
 Download image from Google Drive, archive to Google Cloud Storage, send
 to Google Cloud Vision for processing, add results row to Google Sheet.
