@@ -27,22 +27,33 @@ This exercise is for intermediate users. Those new to using Google APIs, specifi
 
 ## Description
 
-The tutorial has four key objectives... to teach you how to:
-1. **Access and download files on Google Drive**
-1. **Upload files to Google Cloud Storage**
-1. **Analyze images with Google Cloud Vision**
-1. **Write rows of data in Google Sheets**
+The tutorial has four key objectives (six have been implemented as of 2024)... to teach you how to:
+1. **Access and download files** on _Google Drive_
+1. **Upload files/blobs** to _Google Cloud Storage_
+1. **Analyze images** with _Google Cloud Vision_
+1. **Write rows of data** in _Google Sheets_
+1. **Analyze and generate short descriptions** of images with _Google Gemini_ (not part of tutorial)
+1. **Query geolocation metadata of files** on _Google Drive_ and generate a static map with _Google Maps_ (not part of tutorial)
 
 The objectives above are part of a single workflow backing up image files on Drive to GCS, analyzing them with Cloud Vision, and generating a report with the results in Sheets, all by using each product's REST API. (At some point, I'll come up with a Node.js version.) Each step of the tutorial builds successively on the previous, adding one core feature at a time. Each of the `step*` directories represents the working state of the application after successful completion of corresponding tutorial step, culminating with a "clean-up and refactor" step to arrive at the `final` version.
 
+| :point_up: **2024 Update**: Adding use of Gemini & Google Maps |
+|:---------------------------|
+| Two more Google APIs has been added to the [`final`](final) version of the app: the Gemini API (from Google AI [but also available from GCP Vertex AI]) and the Google Maps Static API. Neither API uses the same lower-level platform client library... the Gemini API has its own client library, and the Maps Static API is a GET request from a URL and a valid API key. |
+| The tutorial has not been updated with use of either API, however a [new complete "final" version is available in the repo](https://github.com/wescpy/analyze_gsimg/blob/master/alt/analyze_gsimg-gem-maps-oldauth.py). Also see the 2 new bullet points just below. |
+
+To learn more about the app's "upgrade" with use of the Gemini and Maps APIs, see the _2024 Update_ sidebar above. They are not part of the tutorial at this time. The original four objectives are described below with any 2024 changes.
+
 1. **Access & download image from Google Drive**
 The first step utilizes the [Drive API](https://developers.google.com/drive) to search for the image file and downloads the first match. Along with the filename and binary payload, the file's MIMEtype, last modification timestamp, and size in bytes are also returned.
+    - **2024 Update**: New functionality was added in this step to also query Google Drive for any geolocation metadata which the image file may contain. If geolocation is found, a URL to the Maps Static API is created that would create a new map image with a marker where the photo originated, otherwise it will just be an empty string.
 
 1. **Backup image to Cloud Storage**
 The next step: upload the image as a "blob" [object](https://cloud.google.com/storage/docs/key-terms#objects) to [Cloud Storage](https://cloud.google.com/storage) (GCS), performing an "insert" to the given [bucket](https://cloud.google.com/storage/docs/key-terms#buckets). One benefit is that data in GCS can also be used by other GCP tools. Also, GCS supports multiple storage classes, whereby the less you access that data, the less it costs, i.e., "the colder, the cheaper." Learn more on the [storage class page](https://cloud.google.com/storage/docs/storage-classes). The script features an optional parent folder `FOLDER` to help organize images in the destination bucket. (The GCP client libraries prep the data for GCS, but this service doesn't exist for when using the lower-level *platform* client library, so we have to employ the latter's [`MediaIoBaseUpload`](https://googleapis.github.io/google-api-python-client/docs/epy/googleapiclient.http.MediaIoBaseUpload-class.html) class to help with the upload.)
 
 1. **Analyze image with Cloud Vision**
 The image's binary data is used to send to GCS, but it can be reused with [Cloud Vision](https://cloud.google.com/vision). Use its API to request object detection/identification (called [_label annotation_](https://cloud.google.com/vision/docs/labels)), with the script requesting only the top 5 labels for a faster response. Each label returned includes a confidence score of how likely it appears in the image.
+    - **2024 Update**: After the Cloud Vision step, another was added to call the Gemini API, passing in the image as well as a prompt requesting the LLM to generate a succinct description of the image (in 2-3 sentences). This result is added to the row containing the other data fetched for an image.
 
 1. **Add results to Google Sheets**
 The final feature is report generation in a Google Sheets spreadsheet: for each image backed up, insert a new row of metadata via the [Sheets API](https://developers.google.com/sheets). The row includes:
@@ -50,6 +61,8 @@ The final feature is report generation in a Google Sheets spreadsheet: for each 
     1. File metadata (name, size, MIMEtype, last modified timestamp)
     1. Link to backed up file on GCS
     1. Cloud Vision labels (image content)
+    1. Generated summary from Gemini analysis (not in tutorial)
+    1. Possibly a static map link (only if geodata found; not in tutorial)
 
 1. **Refactor**
  The final, yet optional, step involves refactoring following best practices, moving the "main" body into a separate function, and adding command-line arguments for user flexibility.
@@ -78,6 +91,7 @@ Some of you will not do the tutorial, so below are some recommended exercises fo
 1. ^(_Local file backup_) Rather than backing up file(s) from Google Drive, implement the ability for users to specify files from their local computer; everything else applies: back up to GCS, analyze with Vision, write to Sheets.
 1. ^(_Drive search query_) Rather than specifying specific files to back up, allow the user to enter a search query, and back up all matching files on Drive. **Hint**: Learn about querying Drive on the [search page](https://developers.google.com/drive/api/guides/search-files) in the API docs.
 1. ^(_Port to Node.js_) This is more for the maintainer who enjoys exercises like this, but feel free to do it if you're so inclined. :-) As an example, see [this blog post](https://dev.to/googleworkspace/export-google-docs-as-pdf-without-the-docs-api-9o4) on **exporting Google Docs as PDF** with code samples in both Python & Node.js.
+1. ^(_Add static map to cell_) This is for those who want a unique challenge. The **2024 update** adding a link to Google Maps if geolocation is available in an image's metadata can be improved by actually embedding the map itself into a spreadsheet cell. Unfortunately this functionality isn't available in the Sheets API, so you'd have to use the Apps Script `SpreadsheetApp.newCellImage()` method. Since the app is a Python script, not an Apps Script app, you'd have to use the [Apps Script REST API](https://developers.google.com/apps-script/api/reference/rest) to call this method... good luck!
 
 
 ## Summary

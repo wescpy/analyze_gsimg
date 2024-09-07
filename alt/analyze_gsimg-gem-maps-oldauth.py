@@ -13,7 +13,7 @@
 # limitations under the License.
 
 '''
-analyze_gsimg-gem-maps.py - AI Drive image processing workflow + Maps
+analyze_gsimg-gem-maps-oldauth.py - AI image processing workflow + Maps
 
 Download image from Google Drive, archive to Google Cloud Storage, send
 to Google Cloud Vision for processing, analyze with Gemini LLM, provide
@@ -133,7 +133,7 @@ def vision_label_img(img, top):
     }]}
     rsp = VISION.images().annotate(body=body).execute().get('responses', [{}])[0]
 
-    # return top labels for image as CSV for Sheet (row)
+    # return top labels for image as CSV for Sheet (row) else None
     if 'labelAnnotations' in rsp:
         return ', '.join('(%.2f%%) %s' % (
                 label['score']*100., label['description']) \
@@ -147,7 +147,7 @@ def genai_analyze_img(media):
 
 
 def sheet_append_row(sheet, row):
-    'append row to a Google Sheet, return #cells added'
+    'append row to a Google Sheet, return #cells added else None'
 
     # call Sheets API to write row to Sheet (via its ID)
     rsp = SHEETS.spreadsheets().values().append(
