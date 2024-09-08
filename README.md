@@ -7,7 +7,7 @@
 
 In the corresponding [hands-on tutorial](https://codelabs.developers.google.com/codelabs/drive-gcs-vision-sheets?utm_source=codelabs&utm_medium=et&utm_campaign=CDR_wes_workplace_gsdsanalyzegsimg_gsds_200114&utm_content=-) ("codelab"), developers build a command-line Python script the executes an image processing workflow using APIs from [Google Cloud](http://cloud.google.com/apis) (GCP) and [Google Workspace](http://developers.google.com/gsuite) (GWS; formerly G Suite and Google Apps).
 
-The exercise envisions a business scenario helping an enterprise backup their organization's data (image files, for example) to the cloud, analyze that data with machine learning, and report results formatted for management consumption. This repo provides code solutions for each step of the tutorial and also includes alternate versions of the final script which use different security libraries and/or authorization schemes. (More on this below in the "NOTE for GCP Developers" sidebar and [Authorization scheme and alternative versions](#authorization-scheme-and-alternative-versions) section.)
+The exercise envisions a business scenario helping an enterprise backup their organization's data (image files, for example) to the cloud, analyze that data with machine learning, and report results formatted for management consumption. This repo provides code solutions for each step of the codelab and also includes alternate versions of the final script which use different security libraries and/or authorization schemes. (More on this below in the "NOTE for GCP Developers" sidebar and [Authorization scheme and alternative versions](#authorization-scheme-and-alternative-versions) section.)
 
 This exercise is for intermediate users. Those new to using Google APIs, specifically GWS and GCP APIs, should complete the introductory codelabs (listed at the bottom) or otherwise gain the requisite skills first. Read more about the app in [this Google Developers blog post](http://goo.gle/3nPxmlc) or [its cross-post to the Google Cloud blog](https://cloud.google.com/blog/topics/developers-practitioners/image-archive-analysis-and-report-generation-google-apis?utm_source=blog&utm_medium=partner&utm_campaign=CDR_wes_workplace_gsdsanalyzegsimg_gsds_200114).
 
@@ -18,7 +18,7 @@ This exercise is for intermediate users. Those new to using Google APIs, specifi
 - A GCP project with an active billing account
 - Familiarity with operating system terminal/shell commands
 - Basic skills in [Python](http://python.org) (code is 2/3-compatible)
-- Experience using Google APIs not required for tutorial but may help when reading the code
+- Experience using Google APIs not required for codelab but may help when reading the code
 
 | :memo: **NOTE for GCP developers**: |
 |:---------------------------|
@@ -27,22 +27,22 @@ This exercise is for intermediate users. Those new to using Google APIs, specifi
 
 ## Description
 
-The tutorial has four key objectives (six have been implemented as of 2024)... to teach you how to:
+The codelab has four key objectives (six have been implemented as of 2024)... to teach you how to:
 1. **Access and download files** on _Google Drive_
 1. **Upload files/blobs** to _Google Cloud Storage_
 1. **Analyze images** with _Google Cloud Vision_
+1. **Analyze and generate short descriptions** of images with _Google Gemini_ (not part of codelab)
+1. **Query geolocation metadata of files** on _Google Drive_ and generate a static map with _Google Maps_ (not part of codelab)
 1. **Write rows of data** in _Google Sheets_
-1. **Analyze and generate short descriptions** of images with _Google Gemini_ (not part of tutorial)
-1. **Query geolocation metadata of files** on _Google Drive_ and generate a static map with _Google Maps_ (not part of tutorial)
 
-The objectives above are part of a single workflow backing up image files on Drive to GCS, analyzing them with Cloud Vision, and generating a report with the results in Sheets, all by using each product's REST API. (At some point, I'll come up with a Node.js version.) Each step of the tutorial builds successively on the previous, adding one core feature at a time. Each of the `step*` directories represents the working state of the application after successful completion of corresponding tutorial step, culminating with a "clean-up and refactor" step to arrive at the `final` version.
+The objectives above are part of a single workflow backing up image files on Drive to GCS, analyzing them with Cloud Vision, and generating a report with the results in Sheets, all by using each product's REST API. (At some point, I'll come up with a Node.js version.) Each step of the codelab builds successively on the previous, adding one core feature at a time. Each of the `step*` directories represents the working state of the application after successful completion of corresponding codelab step, culminating with a "clean-up and refactor" step to arrive at the `final` version.
 
 | :point_up: **2024 Update**: Adding use of Gemini & Google Maps |
 |:---------------------------|
 | Two more Google APIs has been added to the [`final`](final) version of the app: the Gemini API (from Google AI [but also available from GCP Vertex AI]) and the Google Maps Static API. Neither API uses the same lower-level platform client library... the Gemini API has its own client library, and the Maps Static API is a GET request from a URL and a valid API key. |
-| The tutorial has not been updated with use of either API, however a [new complete "final" version is available in the repo](https://github.com/wescpy/analyze_gsimg/blob/master/alt/analyze_gsimg-gem-maps-oldauth.py). Also see the 2 new bullet points just below. |
+| The codelab has not been updated with use of either API, however a [new complete "final" version is available in the repo](https://github.com/wescpy/analyze_gsimg/blob/master/alt/analyze_gsimg-gem-maps-oldauth.py). Also see the updates below. |
 
-To learn more about the app's "upgrade" with use of the Gemini and Maps APIs, see the _2024 Update_ sidebar above. They are not part of the tutorial at this time. The original four objectives are described below with any 2024 changes.
+To learn more about the app's "upgrade" with use of the Gemini and Maps APIs, see the _2024 Update_ sidebar above. They are not part of the codelab at this time. The original four objectives are described below with any 2024 changes.
 
 1. **Access & download image from Google Drive**
 The first step utilizes the [Drive API](https://developers.google.com/drive) to search for the image file and downloads the first match. Along with the filename and binary payload, the file's MIMEtype, last modification timestamp, and size in bytes are also returned.
@@ -61,8 +61,8 @@ The final feature is report generation in a Google Sheets spreadsheet: for each 
     1. File metadata (name, size, MIMEtype, last modified timestamp)
     1. Link to backed up file on GCS
     1. Cloud Vision labels (image content)
-    1. Generated summary from Gemini analysis (not in tutorial)
-    1. Possibly a static map link (only if geodata found; not in tutorial)
+    1. Generated summary from Gemini analysis (not in codelab)
+    1. Possibly a static map link (only if geodata found; not in codelab)
 
 1. **Refactor**
  The final, yet optional, step involves refactoring following best practices, moving the "main" body into a separate function, and adding command-line arguments for user flexibility.
@@ -78,7 +78,7 @@ We've selected to use *user account authorization* (instead of *service account 
 
 
 ## Further study recommendations
-Some of you will not do the tutorial, so below are some recommended exercises found in its "Additional Study" section (plus a few bonus ones) as to how you can enhance the script's functionality:
+Some of you will not do the codelab, so below are some recommended exercises found in its "Additional Study" section (plus a few bonus ones) as to how you can enhance the script's functionality:
 
 1. (_Images in folders_) Instead of processing one image, let's say you had one or more images in [Google Drive folders](https://developers.google.com/drive/api/v3/search-files). Back them all up matching each Drive folder on GCS.
 1. (_Images in ZIP files_) Instead of a folder of images, give the script the ability to process ZIP archives containing image files in a similar way. Consider using the Python [`zipfile` module](http://docs.python.org/library/zipfile).
@@ -86,23 +86,23 @@ Some of you will not do the tutorial, so below are some recommended exercises fo
 1. (_Create Sheets charts_) Use the Sheets API to [generate charts](https://developers.google.com/sheets/api/samples/charts) based on the Vision API analysis and categorization.
 1. (_Process documents instead of images_) Instead of analyzing images with the Vision API, let the data come in the form of PDF files and use the [Cloud Natural Language API](http://cloud.google.com/language) to do the analysis. Process individual documents or use your solutions above to handle PDFs in Drive folders or ZIP archives on Drive.
 1. (_Create presentations_) Use the Slides API to generate a slide deck from the backed up images or from the data or charts from the spreadsheet you created/updated with the Sheets API. Check out this pair of blog posts & videos for inspiration: a) [generate slides from spreadsheet data](http://goo.gl/Yb06ZC) and b) [generate slides from images](http://goo.gl/sYL5AM) (JavaScript/Apps Script).
-1. (_Export report as PDF_) Enhance the "report generation" part of the tutorial by exporting the Sheet and/or slide deck as PDF, however this isn't a feature of either the Sheets or Slides APIs. **Hint**: Google Drive API. **Extra credit**: merge both the Sheets and Slides PDFs into one master PDF with a tool like Ghostscript (Linux, Windows) or `Combine PDF Pages.action` (macOS).
+1. (_Export report as PDF_) Enhance the "report generation" part of the codelab by exporting the Sheet and/or slide deck as PDF, however this isn't a feature of either the Sheets or Slides APIs. **Hint**: Google Drive API. **Extra credit**: merge both the Sheets and Slides PDFs into one master PDF with a tool like Ghostscript (Linux, Windows) or `Combine PDF Pages.action` (macOS).
 1. ^(_Enhance reporting with LLMs_) Rather than Cloud Vision labels, ask an LLM (large language model) for a short description of an image, say using the latest OpenAI [GPT](https://platform.openai.com/docs/guides/vision) or Google [Gemini](https://ai.google.dev/gemini-api/docs/api-overview#text_image_input) models via their APIs, and store _that_ in the Sheet.
 1. ^(_Local file backup_) Rather than backing up file(s) from Google Drive, implement the ability for users to specify files from their local computer; everything else applies: back up to GCS, analyze with Vision, write to Sheets.
 1. ^(_Drive search query_) Rather than specifying specific files to back up, allow the user to enter a search query, and back up all matching files on Drive. **Hint**: Learn about querying Drive on the [search page](https://developers.google.com/drive/api/guides/search-files) in the API docs.
 1. ^(_Port to Node.js_) This is more for the maintainer who enjoys exercises like this, but feel free to do it if you're so inclined. :-) As an example, see [this blog post](https://dev.to/googleworkspace/export-google-docs-as-pdf-without-the-docs-api-9o4) on **exporting Google Docs as PDF** with code samples in both Python & Node.js.
-1. ^(_Add static map to cell_) This is for those who want a unique challenge. The **2024 update** adding a link to Google Maps if geolocation is available in an image's metadata can be improved by actually embedding the map itself into a spreadsheet cell. Unfortunately this functionality isn't available in the Sheets API, so you'd have to use the Apps Script `SpreadsheetApp.newCellImage()` method. Since the app is a Python script, not an Apps Script app, you'd have to use the [Apps Script REST API](https://developers.google.com/apps-script/api/reference/rest) to call this method... good luck!
+1. ^(_Add static map to cell_) This is for those who want a unique challenge. The **2024 update** adding a link to Google Maps if geolocation is available in an image's metadata can be improved by actually embedding the map itself into a spreadsheet cell. Unfortunately this functionality isn't available in the Sheets API, so you'd have to use the Apps Script `SpreadsheetApp.newCellImage()` method. Since this is a Python script, you need to create an Apps Script app and use the [Apps Script REST API](https://developers.google.com/apps-script/api/reference/rest) to call this method from Python... good luck!
 
 
 ## Summary
 
-The tutorial (and its sample app) has a goal of helping developers envision a possible business scenario and show an implementation realizing one possible solution. A secondary goal is showing developers how to use different Google APIs together in a single app. If you find a problem with either the codelab or code in this repo, [check to see if there's already an issue](https://github.com/wescpy/analyze_gsimg/issues) or file a new request otherwise. The SLA (service-level agreement) is "best effort." Also happy to review PRs if you have a fix already.
+The codelab (and its sample app) has a goal of helping developers envision a possible business scenario and show an implementation realizing one possible solution. A secondary goal is showing developers how to use different Google APIs together in a single app. If you find a problem with either the codelab or code in this repo, [check to see if there's already an issue](https://github.com/wescpy/analyze_gsimg/issues) or file a new request otherwise. The SLA (service-level agreement) is "best effort." Also happy to review PRs if you have a fix already.
 
 
 # References
 
 - Blog posts
-    - This tutorial and code: [Google Developers](https://developers.googleblog.com/2020/10/image-archive-analysis-and-report?utm_source=ext&utm_medium=partner&utm_campaign=CDR_wes_workplace_gsdsanalyzegsimg_gsds_200114&utm_content=-) and [Google Cloud](https://cloud.google.com/blog/topics/developers-practitioners/image-archive-analysis-and-report-generation-google-apis?utm_source=blog&utm_medium=partner&utm_campaign=CDR_wes_workplace_gsdsanalyzegsimg_gsds_200114) blog posts
+    - This codelab and code: [Google Developers](https://developers.googleblog.com/2020/10/image-archive-analysis-and-report?utm_source=ext&utm_medium=partner&utm_campaign=CDR_wes_workplace_gsdsanalyzegsimg_gsds_200114&utm_content=-) and [Google Cloud](https://cloud.google.com/blog/topics/developers-practitioners/image-archive-analysis-and-report-generation-google-apis?utm_source=blog&utm_medium=partner&utm_campaign=CDR_wes_workplace_gsdsanalyzegsimg_gsds_200114) blog posts
     - [Getting started with GWS APIs and OAuth client IDs](https://dev.to/wescpy/series/25403) (series)
     - [Exporting Google Docs as PDF](https://dev.to/wescpy/export-google-docs-as-pdf-without-the-docs-api-9o4)
     - [A _better_ "Hello World!" Gemini API sample](https://dev.to/wescpy/a-better-google-gemini-api-hello-world-sample-4ddm)
@@ -132,5 +132,5 @@ The tutorial (and its sample app) has a goal of helping developers envision a po
     - [Upload objects to Google Cloud Storage](http://codelabs.developers.google.com/codelabs/cloud-upload-objects-to-cloud-storage) (no coding required)
 
 <small>
-<sup>^</sup> — bonus exercise not found in the codelab
+<sup>^</sup> — bonus exercise not found in codelab
 </small>

@@ -18,9 +18,11 @@ analyze_gsimg-gem-maps-oldauth.py - AI image processing workflow + Maps
 Download image from Google Drive, archive to Google Cloud Storage, send
 to Google Cloud Vision for processing, analyze with Gemini LLM, provide
 Google Maps link with geolocation data, add results row to Google Sheet.
+
+NOTE: While all other samples are Python 2-3 compatible, the Gemini API
+client library does not support 2.x, so this script is only for Python 3.
 '''
 
-from __future__ import print_function
 import argparse
 import base64
 import io
@@ -38,21 +40,21 @@ import google.generativeai as genai
 from settings import API_KEY
 
 # gen AI setup
-PROMPT = 'Describe this image in 2-3 sentences'
-MODEL = 'gemini-1.5-flash-latest'
+PROMPT: str = 'Describe this image in 2-3 sentences'
+MODEL: str = 'gemini-1.5-flash-latest'
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel(MODEL)
 
 # constants recommended in settings.py, database, etc., or
 # omitted entirely requiring users to enter on command-line
-FILE =   'YOUR_IMG_ON_DRIVE'
-BUCKET = 'YOUR_BUCKET_NAME'
-FOLDER = ''  # YOUR IMG FILE FOLDER (if any)
-SHEET =  'YOUR_SHEET_ID'
-TOP = 5  # REQUEST TOP #LABELS FROM CLOUD VISION
+FILE: str =   'YOUR_IMG_ON_DRIVE'
+BUCKET: str = 'YOUR_BUCKET_NAME'
+FOLDER: str = ''  # YOUR IMG FILE FOLDER (if any)
+SHEET: str =  'YOUR_SHEET_ID'
+TOP: int = 5  # REQUEST TOP #LABELS FROM CLOUD VISION
 
 # process credentials for OAuth2 tokens
-SCOPES = (
+SCOPES: tuple = (
     'https://www.googleapis.com/auth/drive.readonly',
     'https://www.googleapis.com/auth/devstorage.full_control',
     'https://www.googleapis.com/auth/cloud-vision',
@@ -75,13 +77,13 @@ VISION = discovery.build('vision',  'v1', http=HTTP)  # or API key
 SHEETS = discovery.build('sheets',  'v4', http=HTTP)
 
 
-def k_ize(nbytes):
+def k_ize(nbytes: str) -> str:
     'convert bytes to kBs'
     return '%6.2fK' % (nbytes/1000.)
 
 
-MAPS_API_URL = 'https://maps.googleapis.com/maps/api/staticmap?size=480x480&markers='
-def drive_geoloc_maps(file_id):
+MAPS_API_URL = 'maps.googleapis.com/maps/api/staticmap?size=480x480&markers='
+def drive_geoloc_maps(file_id: str) -> str:
     'return Maps API URL if image geolocation found, or empty string otherwise'
 
     # query file for metadata on Drive, return empty string if no geolocation
@@ -91,15 +93,15 @@ def drive_geoloc_maps(file_id):
         return ''
 
     # with geolocated image, assemble & return Google Maps Static API call-URL
-    return '%s%s,%s&key=%s' % (MAPS_API_URL, imd['location']['latitude'],
-            imd['location']['longitude'], API_KEY)
+    return f"{MAPS_API_URL}{imd['location']['latitude']}," \
+           f"{imd['location']['longitude']}&key={API_KEY}"
 
 
-def drive_get_img(fname):
+def drive_get_img(fname: str) -> tuple | None:
     'download file from Drive and return file info & binary if found'
 
     # search for file on Google Drive
-    rsp = DRIVE.files().list(q="name='%s'" % fname,
+    rsp = DRIVE.files().list(q=f"name='{fname}'",
             fields='files(id,name,mimeType,modifiedTime)'
     ).execute().get('files', [])
 
@@ -113,7 +115,7 @@ def drive_get_img(fname):
         return fname, mtype, target['modifiedTime'], binary, drive_geoloc_maps(fileId)
 
 
-def gcs_blob_upload(fname, bucket, media, mimetype):
+def gcs_blob_upload(fname: str, bucket: str, media: str, mimetype: str) -> dict:
     'upload an object to a Google Cloud Storage bucket'
 
     # build blob metadata and upload via GCS API
@@ -123,7 +125,7 @@ def gcs_blob_upload(fname, bucket, media, mimetype):
             fields='bucket,name').execute()
 
 
-def vision_label_img(img, top):
+def vision_label_img(img: str, top: str) -> str | None:
     'send image to Vision API for label annotation'
 
     # build image metadata and call Vision API to process
@@ -135,18 +137,18 @@ def vision_label_img(img, top):
 
     # return top labels for image as CSV for Sheet (row) else None
     if 'labelAnnotations' in rsp:
-        return ', '.join('(%.2f%%) %s' % (
-                label['score']*100., label['description']) \
+        return ', '.join(
+                f"({label['score']*100.:.2f}%) {label['description']}" \
                 for label in rsp['labelAnnotations'])
 
 
-def genai_analyze_img(media):
+def genai_analyze_img(media: str) -> str:
     'analyze image with genAI LLM and return analysis'
     image = Image.open(io.BytesIO(media))
     return model.generate_content((PROMPT, image)).text.strip()
 
 
-def sheet_append_row(sheet, row):
+def sheet_append_row(sheet: str, row: str) -> str | None:
     'append row to a Google Sheet, return #cells added else None'
 
     # call Sheets API to write row to Sheet (via its ID)
@@ -158,7 +160,8 @@ def sheet_append_row(sheet, row):
         return rsp.get('updates').get('updatedCells')
 
 
-def main(fname, bucket, sheet_id, folder, top, debug):
+def main(fname: str, bucket: str, sheet_id: str, folder: str,
+         top: str, debug: str) -> bool | None:
     '"main()" drives process from image download through report generation'
 
     # download img file & info from Drive
@@ -167,7 +170,7 @@ def main(fname, bucket, sheet_id, folder, top, debug):
         return
     fname, mtype, ftime, data, maps = rsp
     if debug:
-        print('\n* Downloaded %r (%s, %s, size: %d)' % (fname, mtype, ftime, len(data)))
+        print(f"\n* Downloaded '{fname}' ({mtype}, {ftime}, size: {len(data)}")
         time.sleep(2)
 
     # upload file to GCS
@@ -176,7 +179,7 @@ def main(fname, bucket, sheet_id, folder, top, debug):
     if not rsp:
         return
     if debug:
-        print('\n* Uploaded %r to GCS bucket %r' % (rsp['name'], rsp['bucket']))
+        print(f"\n* Uploaded \'{rsp['name']}\' to GCS bucket \'{rsp['bucket']}\''")
         time.sleep(2)
 
     # process w/Vision
@@ -184,7 +187,7 @@ def main(fname, bucket, sheet_id, folder, top, debug):
     if not viz:
         return
     if debug:
-        print('\n* Top %d labels from Vision API: %s' % (top, viz))
+        print(f'\n* Top {top} labels from Vision API: {viz}')
         time.sleep(2)
 
     # process w/Gemini
@@ -192,21 +195,21 @@ def main(fname, bucket, sheet_id, folder, top, debug):
     if not gem:
         return
     if debug:
-        print('\n* Analysis from Gemini API: %s' % gem)
+        print(f'\n* Analysis from Gemini API: {gem}')
         time.sleep(2)
 
     # build row to write to Sheet
     fsize = k_ize(len(data))
     row = [folder,
-            '=HYPERLINK("storage.cloud.google.com/%s/%s", "%s")' % (
-            bucket, gcsname, fname), mtype, ftime, fsize, viz, gem
+            f'=HYPERLINK("storage.cloud.google.com/{bucket}/{gcsname}", "{fname}")',
+            mtype, ftime, fsize, viz, gem
     ]
 
     # process optional geolocation
     if maps:
-        row.append('=HYPERLINK("%s", "Photo location")' % maps)
+        row.append(f'=HYPERLINK("{maps}", "Photo location")')
         if debug:
-            print('\n* Found location, Maps API URL: %s' % maps)
+            print(f'\n* Found location, Maps API URL: {maps}')
             time.sleep(2)
 
     # add new row to Sheet, get cells-saved count
@@ -214,36 +217,41 @@ def main(fname, bucket, sheet_id, folder, top, debug):
     if not rsp:
         return
     if debug:
-        print('\n* Added %d cells to Google Sheet' % rsp)
+        print(f'\n* Added {rsp} cells to Google Sheet')
         time.sleep(2)
     return True
 
 
 if __name__ == '__main__':
-    # args: [-hv] [-i imgfile] [-b bucket] [-f folder] [-s Sheet ID] [-t top labels]
+    # args: [-hvw] [-i imgfile] [-b bucket] [-f folder] [-s sheet_id] [-t top_labels]
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--imgfile",   default=FILE,
-            help="image file name")
-    parser.add_argument("-b", "--bucket_id", default=BUCKET,
-            help="Google Cloud Storage bucket name")
-    parser.add_argument("-f", "--folder",    default=FOLDER,
-            help="Google Cloud Storage image folder (default: '')")
-    parser.add_argument("-s", "--sheet_id",  default=SHEET,
-            help="Google Sheet (Drive file) ID (44-char str)")
-    parser.add_argument("-t", "--viz_top",   default=TOP,
-            help="return top N Vision API labels (default: %d)" % TOP)
-    parser.add_argument("-v", "--verbose",   action='store_true',
-            help="verbose display output (default: False)")
+    parser.add_argument('-i', '--imgfile',    default=FILE,
+            help=f"image file name (default: '{FILE}')")
+    parser.add_argument('-b', '--bucket',     default=BUCKET,
+            help=f"Cloud Storage bucket name (default: '{BUCKET}')")
+    parser.add_argument('-f', '--folder',     default=FOLDER,
+            help=f"Cloud Storage image folder (default: '{FOLDER}')")
+    parser.add_argument('-s', '--sheet_id',   default=SHEET,
+            help=f"Sheet (Drive file) ID (44-char str; default: '{SHEET}')")
+    parser.add_argument('-t', '--top_labels', default=TOP,
+            help=f"return top N Vision API labels (default: {TOP})")
+    parser.add_argument('-w', '--browser',    action='store_false',
+            help='do not open browser to Sheet (default: True [open])')
+    parser.add_argument('-v', '--verbose',    action='store_true',
+            help='verbose display output (default: False)')
     args = parser.parse_args()
 
-    print('Processing file %r... please wait' % args.imgfile)
+    print(f"Processing file '{args.imgfile}'... please wait")
     print('-' * 65)
-    rsp = main(args.imgfile, args.bucket_id,
-            args.sheet_id, args.folder, args.viz_top, args.verbose)
+    rsp = main(args.imgfile, args.bucket, args.sheet_id,
+               args.folder, args.top_labels, args.verbose)
     if rsp:
-        sheet_url = 'https://docs.google.com/spreadsheets/d/%s/edit' % args.sheet_id
-        print('\n* DONE: opening web browser to spreadsheet')
-        print(sheet_url)
-        webbrowser.open(sheet_url, new=1, autoraise=True)
+        if args.browser:
+            sheet_url = f'https://docs.google.com/spreadsheets/d/{args.sheet_id}/edit'
+            print('\n* DONE: opening web browser to spreadsheet')
+            print(sheet_url)
+            webbrowser.open(sheet_url, autoraise=True)
+        else:
+            print('\n* DONE')
     else:
-        print('\n* ERROR: could not process %r' % args.imgfile)
+        print(f"\n* ERROR: could not process '{args.imgfile}'")
