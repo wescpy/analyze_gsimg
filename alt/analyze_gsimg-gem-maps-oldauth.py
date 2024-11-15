@@ -41,7 +41,7 @@ from settings import API_KEY
 
 # gen AI setup
 PROMPT: str = 'Describe this image in 2-3 sentences'
-MODEL: str = 'gemini-1.5-flash-latest'
+MODEL: str = 'gemini-1.5-flash'
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel(MODEL)
 
@@ -194,6 +194,7 @@ def main(fname: str, bucket: str, sheet_id: str, folder: str,
     gem = genai_analyze_img(data)
     if not gem:
         return
+    gem = gem.replace("Here's a description of the image:", '').replace("Here is a description of the image:", '').strip()
     if debug:
         print(f'\n* Analysis from Gemini API: {gem}')
         time.sleep(2)
@@ -223,7 +224,7 @@ def main(fname: str, bucket: str, sheet_id: str, folder: str,
 
 
 if __name__ == '__main__':
-    # args: [-hvw] [-i imgfile] [-b bucket] [-f folder] [-s sheet_id] [-t top_labels]
+    # args: [-hvn] [-i imgfile] [-b bucket] [-f folder] [-s sheet_id] [-t top_labels]
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--imgfile',    default=FILE,
             help=f"image file name (default: '{FILE}')")
@@ -235,23 +236,23 @@ if __name__ == '__main__':
             help=f"Sheet (Drive file) ID (44-char str; default: '{SHEET}')")
     parser.add_argument('-t', '--top_labels', default=TOP,
             help=f"return top N Vision API labels (default: {TOP})")
-    parser.add_argument('-w', '--browser',    action='store_false',
-            help='do not open browser to Sheet (default: True [open])')
+    parser.add_argument('-n', '--no_browser',    action='store_true',
+            help='do not open browser to Sheet (default: False [open])')
     parser.add_argument('-v', '--verbose',    action='store_true',
             help='verbose display output (default: False)')
     args = parser.parse_args()
 
-    print(f"Processing file '{args.imgfile}'... please wait")
+    print(f"\nProcessing file '{args.imgfile}'... please wait")
     print('-' * 65)
     rsp = main(args.imgfile, args.bucket, args.sheet_id,
                args.folder, args.top_labels, args.verbose)
     if rsp:
-        if args.browser:
+        if not args.no_browser:
             sheet_url = f'https://docs.google.com/spreadsheets/d/{args.sheet_id}/edit'
             print('\n* DONE: opening web browser to spreadsheet')
             print(sheet_url)
             webbrowser.open(sheet_url, autoraise=True)
         else:
-            print('\n* DONE')
+            print('\n* DONE: no web browser requested')
     else:
         print(f"\n* ERROR: could not process '{args.imgfile}'")
