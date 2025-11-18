@@ -1,4 +1,4 @@
-# Copyright 2024 CyberWeb Consulting LLC
+# Copyright 2024-2025 CyberWeb Consulting LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,14 +36,13 @@ from httplib2 import Http
 from oauth2client import file, client, tools
 
 from PIL import Image
-import google.generativeai as genai
+from google import genai
 from settings import API_KEY
 
 # gen AI setup
 PROMPT: str = 'Describe this image in 2-3 sentences'
-MODEL: str = 'gemini-1.5-flash'
-genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel(MODEL)
+MODEL: str = 'gemini-2.5-flash'
+GENAI = genai.Client(api_key=API_KEY)
 
 # constants recommended in settings.py, database, etc., or
 # omitted entirely requiring users to enter on command-line
@@ -145,7 +144,8 @@ def vision_label_img(img: str, top: str) -> str | None:
 def genai_analyze_img(media: str) -> str:
     'analyze image with genAI LLM and return analysis'
     image = Image.open(io.BytesIO(media))
-    return model.generate_content((PROMPT, image)).text.strip()
+    return GENAI.models.generate_content(
+            model=MODEL, contents=(PROMPT, image)).text.strip()
 
 
 def sheet_append_row(sheet: str, row: str) -> str | None:

@@ -11,6 +11,13 @@ There are several generations of Google-related authorization and client librari
 > Both terms are generally referred to in industry as "authn" & "authz" for differentiation. Another source of confusion is that as a whole, the general term "auth" is used to describe both, especially when used in conjunction with each other.
 
 
+> **Nov 2024 update** (Google AI/Gemini and Google Maps):
+> The original app was updated to add use of the Gemini API to provide a human-friendly description to augment the labels/objects identified by the Cloud Vision API in the image. Furthermore, if the image is a photograph and location metadata is available in the file, the metadata is extracted by the Drive API and the Google Maps Static API is used to create a map image identifying where the photo was taken. The code sample uses the Gemini API from the Google AI platform; it is also accessible from the GCP Vertex AI platform.
+
+> **Nov 2025 update** (Google AI/Gemini):
+> A year after adding Gemini support, the code has been updated to use the unified client library (released Dec 2024) as well as the latest update Gemini (2.5 Flash) model. Instructions on how to use the API can be found in [this Gemini 2.5 API "missing manual" post](https://bit.ly/4kFkmLm).
+
+
 ## Auth libraries
 
 ### Background
@@ -24,19 +31,24 @@ The `oauth2client` library was deprecated in 2017 in favor of newer replacements
 
 ### What libraries are available
 
-* Older auth libraries
+* Old auth libraries
     - \*[`httplib2`](https://github.com/httplib2/httplib2)
     - [`oauth2client`](https://github.com/googleapis/oauth2client)
 
 While `oauth2client` is Python 2 & 3 compatible, cache OAuth tokens for developers, and threadsafe, it's unfortunately deprecated and no longer actively developed nor maintained. (\* — `httplib2` is still used internally by the newer auth libraries below, but users no longer have to do so explicitly.) So we recommend you port to these newer auth libraries:
 
-* Newer auth libraries
+* New/current auth libraries
     - [`google.auth` & `google.oauth2`](https://github.com/googleapis/google-auth-library-python)
     - [`google_auth_oauthlib`](https://github.com/googleapis/google-auth-library-python-oauthlib)
 
 These libraries are available for both Python 2 & 3 and are currently maintained, however they require developers to manage their own OAuth tokens. In our code samples, you'll see that the OAuth2 credentials are saved as JSON (to `tokens.json`). The only issue with the token management service is that it's not threadsafe (whereas it is in the older libraries that manage the tokens on behalf of developers).
 
 If threadsafety isn't a concern in your applications, we encourage you to move to the newer, supported auth libraries instead and encourage developers to compare [final/analyze_gsimg.py](/final/analyze_gsimg.py) with [alt/analyze_gsimg-newauth.py](/alt/analyze_gsimg-newauth.py) to know the diffs and recommend you review the section below called "Migrating to newer auth libs" and get migration tips there. Using `diff -u` (or `-c`) should show you the *exact* diffs.
+
+| :memo: More about **old vs. new/current auth libraries** |
+|:---------------------------|
+| To learn more about the differences between the old and new/current Python auth libraries, see [this post](https://t.co/YNrlS0RSda) which goes into detail on the topic. |
+
 
 * GCP (higher-level) product client libraries
 
@@ -71,7 +83,7 @@ Filename | Description
 `alt/analyze_gsimg-newauth-svc.py` | Same as `alt/analyze_gsimg-newauth.py` but uses svc acct auth instead of user auth
 `alt/analyze_gsimg-oldauth-svc-gcp.py` | Same as `alt/analyze_gsimg-oldauth-svc.py` but uses the GCP product client libraries and same as `alt/analyze_gsimg-oldauth-gcp.py` but uses svc acct auth instead of user auth
 `alt/analyze_gsimg-newauth-svc-gcp.py` | Same as `alt/analyze_gsimg-oldauth-svc-gcp.py` but uses the newer auth libraries
-`alt/analyze_gsimg-gem-maps-oldauth.py` | Same as `final/analyze_gsimg.py` but adds use of Gemini & Maps Static APIs (2024)
+`alt/analyze_gsimg-gem-maps-oldauth.py` | Same as `final/analyze_gsimg.py` but adds use of Gemini & Maps Static APIs (2025)
 
 The code structure, variable names, and even the comments b/w all of them are *identical* save for their use of the various libraries described, meaning a `diff` between any pair will highlight only the *exact* differences that are meaningful, ultimately letting you gain insight on porting/migrating b/w them.
 
