@@ -39,9 +39,7 @@ The objectives above are part of a single workflow backing up image files on Dri
 
 | :point_up: **2024 Update**: Adding use of Gemini & Google Maps |
 |:---------------------------|
-| Two more Google APIs have been added to the app: the [Gemini API (from Google AI](https://ai.google.dev/api) [and also available from GCP Vertex AI]) and the Google Maps Static API. Neither API uses the same lower-level platform client library... the Gemini API has its own client library, and the Maps Static API is a GET request from a URL. Both Gemini & Maps APIs require a valid API key. See [this post](http://bit.ly/4kFkmLm) to learn more about using the Gemini API from either Google AI or GCP Vertex AI. |
-
-| The codelab has not been updated with use of either API, however [this new, **complete** "final" version is available in the repo](https://github.com/wescpy/analyze_gsimg/blob/master/alt/analyze_gsimg-gem-maps-oldauth.py). Also see the updates below. |
+| Two more Google APIs have been added to the app: the [Gemini API (from Google AI](https://ai.google.dev/api) [and also available from GCP Vertex AI]) and the Google Maps Static API. Neither API uses the same lower-level platform client library... the Gemini API has its own client library, and the Maps Static API is a GET request from a URL. Both Gemini & Maps APIs require a valid API key. The codelab has not been updated with use of either API, however [this new, **complete** "final" version is available in the repo](https://github.com/wescpy/analyze_gsimg/blob/master/alt/analyze_gsimg-gem-maps-oldauth.py). Also see the updates below. New to the Gemini API? See [this post](http://bit.ly/4kFkmLm) to learn more. |
 
 To learn more about the app's "upgrade" with use of the Gemini and Maps APIs, see the _2024 Update_ sidebar above. They are not part of the codelab at this time. The original four objectives are described below with any 2024 changes.
 
