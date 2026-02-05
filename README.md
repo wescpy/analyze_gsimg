@@ -5,11 +5,11 @@
 |:---------------------------|
 | Since the original maintainer is no longer at Google, it's highly unlikely anyone there will maintain the repo, so this fork will likely become the canonical version as of 2024. |
 
-In the corresponding [hands-on tutorial](https://codelabs.developers.google.com/codelabs/drive-gcs-vision-sheets?utm_source=codelabs&utm_medium=et&utm_campaign=CDR_wes_workplace_gsdsanalyzegsimg_gsds_200114&utm_content=-) ("codelab"), developers build a command-line Python script the executes an image processing workflow using APIs from [Google Cloud](http://cloud.google.com/apis) (GCP) and [Google Workspace](http://developers.google.com/gsuite) (GWS; formerly G Suite and Google Apps).
+In the corresponding [hands-on tutorial](https://codelabs.developers.google.com/codelabs/drive-gcs-vision-sheets?utm_source=codelabs&utm_medium=et&utm_campaign=CDR_wes_workplace_gsdsanalyzegsimg_gsds_200114&utm_content=-) ("codelab"), developers build a command-line Python script that executes an image processing workflow using APIs from [Google Cloud](http://cloud.google.com/apis) (GCP) and [Google Workspace](http://developers.google.com/gsuite) (GWS; formerly G Suite and Google Apps).
 
 The exercise envisions a business scenario helping an enterprise backup their organization's data (image files, for example) to the cloud, analyze that data with machine learning, and report results formatted for management consumption. This repo provides code solutions for each step of the codelab and also includes alternate versions of the final script which use different security libraries and/or authorization schemes. (More on this below in the "NOTE for GCP Developers" sidebar and [Authorization scheme and alternative versions](#authorization-scheme-and-alternative-versions) section.)
 
-This exercise is for intermediate users. Those new to using Google APIs, specifically GWS and GCP APIs, should complete the introductory codelabs (listed at the bottom) or otherwise gain the requisite skills first. Read more about the app in [this Google Developers blog post](http://goo.gle/3nPxmlc) or [its cross-post to the Google Cloud blog](https://cloud.google.com/blog/topics/developers-practitioners/image-archive-analysis-and-report-generation-google-apis?utm_source=blog&utm_medium=partner&utm_campaign=CDR_wes_workplace_gsdsanalyzegsimg_gsds_200114).
+This exercise is for intermediate users. Those new to using Google APIs, specifically GWS and GCP APIs, should complete the introductory codelabs (listed at the bottom) or otherwise gain the requisite skills first. Read more about the app in [this Google Developers blog post](http://goo.gle/3nPxmlc) or [its cross-post to the Google Cloud blog](https://cloud.google.com/blog/topics/developers-practitioners/image-archive-analysis-and-report-generation-google-apis?utm_source=blog&utm_medium=partner&utm_campaign=CDR_wes_workplace_gsdsanalyzegsimg_gsds_200114), and also check out [this presentation I gave on this demo app](http://youtu.be/bvK1hlErCQ8).
 
 
 ## Prerequisites
@@ -39,8 +39,9 @@ The objectives above are part of a single workflow backing up image files on Dri
 
 | :point_up: **2024 Update**: Adding use of Gemini & Google Maps |
 |:---------------------------|
-| Two more Google APIs has been added to the [`final`](final) version of the app: the Gemini API (from Google AI [but also available from GCP Vertex AI]) and the Google Maps Static API. Neither API uses the same lower-level platform client library... the Gemini API has its own client library, and the Maps Static API is a GET request from a URL and a valid API key. |
-| The codelab has not been updated with use of either API, however a [new complete "final" version is available in the repo](https://github.com/wescpy/analyze_gsimg/blob/master/alt/analyze_gsimg-gem-maps-oldauth.py). Also see the updates below. |
+| Two more Google APIs have been added to the app: the [Gemini API (from Google AI](https://ai.google.dev/api) [and also available from GCP Vertex AI]) and the Google Maps Static API. Neither API uses the same lower-level platform client library... the Gemini API has its own client library, and the Maps Static API is a GET request from a URL. Both Gemini & Maps APIs require a valid API key. See [this post](http://bit.ly/4kFkmLm) to learn more about using the Gemini API from either Google AI or GCP Vertex AI. |
+
+| The codelab has not been updated with use of either API, however [this new, **complete** "final" version is available in the repo](https://github.com/wescpy/analyze_gsimg/blob/master/alt/analyze_gsimg-gem-maps-oldauth.py). Also see the updates below. |
 
 To learn more about the app's "upgrade" with use of the Gemini and Maps APIs, see the _2024 Update_ sidebar above. They are not part of the codelab at this time. The original four objectives are described below with any 2024 changes.
 
@@ -65,7 +66,7 @@ The final feature is report generation in a Google Sheets spreadsheet: for each 
     1. Possibly a static map link (only if geodata found; not in codelab)
 
 1. **Refactor**
- The final, yet optional, step involves refactoring following best practices, moving the "main" body into a separate function, and adding command-line arguments for user flexibility.
+The final, yet optional, step involves refactoring following best practices, moving the "main" body into a separate function, and adding command-line arguments for user flexibility.
 
 | :memo: Folders do not "exist" on GCS |
 |:---------------------------|
